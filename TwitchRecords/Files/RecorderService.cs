@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
 using TwitchRecords.Conversion;
+using TwitchRecords.Helper;
 using TwitchRecords.Upload.Telegram;
 
 namespace TwitchRecords.Files;
@@ -151,7 +152,7 @@ public class RecorderService
         string resultFileName = $"{newGuid:N}.mp4";
         string resultFilePath = Path.Combine(config.FilesFolder, resultFileName);
 
-        using var conversion = ffmpeger.CreateConversion(resultFilePath);
+        using var conversion = ffmpeger.CreateConversionTsToMp4(resultFilePath);
 
         foreach (StreamFileInfo info in record.files)
         {
@@ -166,16 +167,22 @@ public class RecorderService
         }
 
         await conversion.InputStream.DisposeAsync();
-
         await conversion.WaitAsync();
+
+        string thumbnailPath = await ffmpeger.MakeThumbnailAsync(resultFilePath);
 
         string text = record.text ?? "Без текста";
 
         VideoInfo videoInfo = await ffmpeger.TestVideoAsync(resultFilePath);
 
-        using (FileStream fs = new(resultFilePath, FileMode.Open, FileAccess.Read))
         {
-            await uploader.UploadAsync(text, resultFileName, fs, videoInfo.width, videoInfo.height, videoInfo.duration);
+            using var videoFs = new FileStream(resultFilePath, FileMode.Open, FileAccess.Read);
+            using var thumbFs = new FileStream(thumbnailPath, FileMode.Open, FileAccess.Read);
+
+            FileContentInfo videoFileInfo = new(resultFileName, videoFs);
+            FileContentInfo thumbnailFileInfo = new(thumbnailPath, thumbFs);
+
+            await uploader.UploadAsync(text, videoFileInfo, videoInfo, thumbnailFileInfo);
         }
 
         File.Delete(resultFilePath);

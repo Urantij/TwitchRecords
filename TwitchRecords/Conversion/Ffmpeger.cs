@@ -23,18 +23,38 @@ public class Ffmpeger
         ffmpegFolderPath = options.Value.FfmpegFolderPath;
     }
 
-    public ConversionHandler CreateConversion(string resultFilePath)
+    public ConversionHandler CreateConversionTsToMp4(string resultFilePath)
+    {
+        return CreateConversion($"-f mpegts -i pipe:0 -c copy -f mp4 {resultFilePath}");
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="videoFilePath"></param>
+    /// <returns>Путь до картинки</returns>
+    public async Task<string> MakeThumbnailAsync(string videoFilePath)
+    {
+        string resultPath = Path.ChangeExtension(videoFilePath, "jpg");
+
+        using var conversion = CreateConversion($"-i {videoFilePath} -frames:v 1 -update 1 {resultPath}", redirectStandardInput: false);
+        await conversion.WaitAsync();
+
+        return resultPath;
+    }
+
+    public ConversionHandler CreateConversion(string args, bool redirectStandardInput = true)
     {
         Process process = new();
 
         process.StartInfo.FileName = MakePath("ffmpeg");
 
-        process.StartInfo.Arguments = $"-f mpegts -i pipe:0 -c copy -f mp4 {resultFilePath}";
+        process.StartInfo.Arguments = args;
 
         process.StartInfo.UseShellExecute = false;
-        process.StartInfo.RedirectStandardInput = true;
-        process.StartInfo.RedirectStandardOutput = true;
-        process.StartInfo.RedirectStandardError = true;
+        process.StartInfo.RedirectStandardInput = redirectStandardInput;
+        // process.StartInfo.RedirectStandardOutput = true;
+        // process.StartInfo.RedirectStandardError = true;
         process.StartInfo.WindowStyle = ProcessWindowStyle.Hidden; //написано, что должно быть че то тру, а оно фолс. ну похуй, работает и ладно
         process.StartInfo.CreateNoWindow = true;
         process.Start();

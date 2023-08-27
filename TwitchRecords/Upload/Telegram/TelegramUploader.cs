@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
+using TwitchRecords.Conversion;
+using TwitchRecords.Helper;
 
 namespace TwitchRecords.Upload.Telegram;
 
@@ -28,7 +30,7 @@ public class TelegramUploader : IDisposable
         await client.LoginUserIfNeeded();
     }
 
-    public Task UploadAsync(string text, string fileName, Stream fileContent, int width, int height, double duration)
+    public Task UploadAsync(string text, FileContentInfo videoFile, VideoInfo videoInfo, FileContentInfo? thumbFile)
     {
         // Я не уверен, в какой момент просит verification_code
         // Так что на всякий случай просто.
@@ -42,26 +44,49 @@ public class TelegramUploader : IDisposable
 
             TL.ChatBase chat = chats.chats.First(c => c.Key == config.ChatId).Value;
 
-            TL.InputFileBase uploadedFile = await client.UploadFileAsync(fileContent, fileName);
+            TL.InputFileBase uploadedVideo = await client.UploadFileAsync(videoFile.content, videoFile.name);
 
-            await UploadVideoAsync(chat, text, uploadedFile, width, height, duration);
+            TL.InputFileBase? uploadedThumbnail;
+            if (thumbFile != null)
+            {
+                uploadedThumbnail = await client.UploadFileAsync(thumbFile.content, thumbFile.name);
+            }
+            else
+            {
+                uploadedThumbnail = null;
+            }
+
+            await PostVideoAsync(chat, text, uploadedVideo, uploadedThumbnail, videoInfo.width, videoInfo.height, videoInfo.duration);
 
             logger.LogInformation("Загрузили видео.");
         });
     }
 
     // https://stackoverflow.com/a/71845019/21555531
-    Task UploadVideoAsync(TL.InputPeer peer, string text, TL.InputFileBase fileBase, int width, int height, double duration)
+    Task PostVideoAsync(TL.InputPeer peer, string text, TL.InputFileBase fileBase, TL.InputFileBase? thumb, int width, int height, double duration)
     {
-        return client.SendMessageAsync(peer, text, new TL.InputMediaUploadedDocument
+        TL.InputMediaUploadedDocument mediaDocument = new()
         {
             file = fileBase,
             mime_type = "video/mp4",
             attributes = new[] {
-                new TL.DocumentAttributeVideo { duration = duration, w = width, h = height,
-                flags = TL.DocumentAttributeVideo.Flags.supports_streaming }
+                new TL.DocumentAttributeVideo()
+                {
+                    duration = duration,
+                    w = width,
+                    h = height,
+                    flags = TL.DocumentAttributeVideo.Flags.supports_streaming
+                }
             }
-        });
+        };
+
+        if (thumb != null)
+        {
+            mediaDocument.thumb = thumb;
+            mediaDocument.flags = TL.InputMediaUploadedDocument.Flags.has_thumb;
+        }
+
+        return client.SendMessageAsync(peer, text, mediaDocument);
     }
 
     string? Config(string what)
