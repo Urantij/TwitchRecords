@@ -1,0 +1,23 @@
+{
+    "TwitchChannelName": "urantij",
+    "TwitchChannelId": "100596648",
+    "DurationToKeep": "00:01:00",
+    "Twitch": {
+        "Api": {
+            "ClientId": "id",
+            "Secret": "secret"
+        },
+        "Chat": {
+            "Username": "botname",
+            "Token": "oauth:123"
+        }
+    },
+    "Conversion": {
+    },
+    "Telegram": {
+        "AppId": "123",
+        "AppHash": "123abc",
+        "Phone": "+7922123123",
+        "ChatId": 123456678
+    }
+}
