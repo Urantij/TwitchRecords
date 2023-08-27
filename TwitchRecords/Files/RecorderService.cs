@@ -56,7 +56,7 @@ public class RecorderService
         return true;
     }
 
-    public bool Stop(string? who = null)
+    public bool Stop(string? text, string? who = null)
     {
         lock (locker)
         {
@@ -66,6 +66,9 @@ public class RecorderService
             var record = currentRecordInfo;
             if (who != null)
                 currentRecordInfo.TryAddPeople(who);
+
+            if (text != null)
+                currentRecordInfo.text = text;
 
             currentRecordInfo = null;
             filesManager.FileAppeared -= FileAppearedRecord;

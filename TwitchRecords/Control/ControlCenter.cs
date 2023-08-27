@@ -77,7 +77,9 @@ public class ControlCenter : IDisposable
         }
         else if (command.Equals("стоп", StringComparison.OrdinalIgnoreCase))
         {
-            bool stopped = recorder.Stop(who: name);
+            string? text = args.Length > 0 ? string.Join(' ', args) : null;
+
+            bool stopped = recorder.Stop(text, who: name);
 
             if (stopped)
             {
