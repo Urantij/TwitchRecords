@@ -15,6 +15,8 @@ public class AppConfig
 
     public string FilesFolder { get; set; } = "Cache";
 
+    public bool ClearCacheOnStart { get; set; } = true;
+
     public TimeSpan DurationToKeep { get; set; } = TimeSpan.FromMinutes(5);
     public TimeSpan PostScreenDuration { get; set; } = TimeSpan.FromSeconds(15);
     /// <summary>

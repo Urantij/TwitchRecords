@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Options;
 using TwitchRecords.Control;
 using TwitchRecords.Conversion;
 using TwitchRecords.Files;
@@ -50,6 +51,17 @@ public class Program
         var app = builder.Build();
 
         {
+            var appOptions = app.Services.GetRequiredService<IOptions<AppConfig>>();
+            Directory.CreateDirectory(appOptions.Value.FilesFolder);
+            if (appOptions.Value.ClearCacheOnStart)
+            {
+                var files = Directory.GetFiles(appOptions.Value.FilesFolder);
+                foreach (var filePath in files)
+                {
+                    File.Delete(filePath);
+                }
+            }
+
             var ffmpeg = app.Services.GetRequiredService<Ffmpeger>();
             bool ffmpegTest = await ffmpeg.CheckAsync();
 
