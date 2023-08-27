@@ -181,7 +181,16 @@ public class RecorderService
 
         string thumbnailPath = await ffmpeger.MakeThumbnailAsync(resultFilePath);
 
+        // TODO Было бы логично тут стримнгбилдер заюзать, ну да ладно.
         string text = record.text ?? "Без текста";
+        {
+            StreamFileInfo last = record.files.Last();
+
+            TimeSpan startTime = record.files.First().onStreamTime;
+            TimeSpan endTime = last.onStreamTime + TimeSpan.FromSeconds(last.duration);
+
+            text += $"\n{startTime:hh\\:mm\\:ss} - {endTime:hh\\:mm\\:ss}";
+        }
         if (record.people.Count > 0)
         {
             text += "\n" + string.Join(", ", record.people);

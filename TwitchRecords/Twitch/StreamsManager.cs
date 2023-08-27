@@ -180,7 +180,9 @@ class StreamsManager
             item.bufferWriteStream.Dispose();
         }
 
-        StreamFileInfo fileInfo = new(fileName, item.segment.duration, item.segment.programDate);
+        TimeSpan onStreamTime = item.segment.programDate - handler.handlerCreationDate;
+
+        StreamFileInfo fileInfo = new(fileName, item.segment.duration, item.segment.programDate, onStreamTime);
 
         filesManager.AddFile(fileInfo);
     }
