@@ -47,6 +47,7 @@ public class ControlCenter : IDisposable
         if (!e.text.StartsWith(config.Prefix))
             return;
 
+        string name = e.displayName ?? e.username;
         string command;
         string[] args;
 
@@ -57,13 +58,13 @@ public class ControlCenter : IDisposable
             args = split.Skip(1).ToArray();
         }
 
-        logger.LogInformation("Используется команда {command} {who}", command, e.displayName ?? e.username);
+        logger.LogInformation("Используется команда {command} {who}", command, name);
 
         if (command.Equals("старт", StringComparison.OrdinalIgnoreCase))
         {
             string? text = args.Length > 0 ? string.Join(' ', args) : null;
 
-            bool started = recorder.Start(text);
+            bool started = recorder.Start(text, who: name);
 
             if (started)
             {
@@ -76,7 +77,7 @@ public class ControlCenter : IDisposable
         }
         else if (command.Equals("стоп", StringComparison.OrdinalIgnoreCase))
         {
-            bool stopped = recorder.Stop();
+            bool stopped = recorder.Stop(who: name);
 
             if (stopped)
             {
@@ -91,7 +92,7 @@ public class ControlCenter : IDisposable
         {
             string? text = args.Length > 0 ? string.Join(' ', args) : null;
 
-            bool started = recorder.DoScreen(text);
+            bool started = recorder.DoScreen(text, who: name);
 
             if (started)
             {

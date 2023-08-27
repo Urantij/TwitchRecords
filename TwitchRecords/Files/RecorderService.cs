@@ -34,17 +34,21 @@ public class RecorderService
         this.ffmpeger = ffmpeger;
     }
 
-    public bool Start(string? text)
+    public bool Start(string? text, string? who = null)
     {
         lock (locker)
         {
             if (currentRecordInfo != null)
             {
                 currentRecordInfo.text ??= text;
+                if (who != null)
+                    currentRecordInfo.TryAddPeople(who);
                 return false;
             }
 
             currentRecordInfo = new RecordInfo(text);
+            if (who != null)
+                currentRecordInfo.TryAddPeople(who);
 
             filesManager.FileAppeared += FileAppearedRecord;
         }
@@ -52,7 +56,7 @@ public class RecorderService
         return true;
     }
 
-    public bool Stop()
+    public bool Stop(string? who = null)
     {
         lock (locker)
         {
@@ -60,6 +64,8 @@ public class RecorderService
                 return false;
 
             var record = currentRecordInfo;
+            if (who != null)
+                currentRecordInfo.TryAddPeople(who);
 
             currentRecordInfo = null;
             filesManager.FileAppeared -= FileAppearedRecord;
@@ -80,7 +86,7 @@ public class RecorderService
         return true;
     }
 
-    public bool DoScreen(string? text)
+    public bool DoScreen(string? text, string? who = null)
     {
         lock (locker)
         {
@@ -89,10 +95,14 @@ public class RecorderService
             if (currentScreenInfo != null)
             {
                 currentScreenInfo.text ??= text;
+                if (who != null)
+                    currentScreenInfo.TryAddPeople(who);
                 return false;
             }
 
             currentScreenInfo = new RecordInfo(text);
+            if (who != null)
+                currentScreenInfo.TryAddPeople(who);
 
             currentScreenInfo.files.AddRange(filesManager.RequireFiles());
             filesManager.FileAppeared += FileAppearedScreen;
@@ -172,6 +182,10 @@ public class RecorderService
         string thumbnailPath = await ffmpeger.MakeThumbnailAsync(resultFilePath);
 
         string text = record.text ?? "Без текста";
+        if (record.people.Count > 0)
+        {
+            text += "\n" + string.Join(", ", record.people);
+        }
 
         VideoInfo videoInfo = await ffmpeger.TestVideoAsync(resultFilePath);
 
