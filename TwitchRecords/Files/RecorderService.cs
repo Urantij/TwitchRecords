@@ -212,5 +212,6 @@ public class RecorderService
         }
 
         File.Delete(resultFilePath);
+        File.Delete(thumbnailPath);
     }
 }
