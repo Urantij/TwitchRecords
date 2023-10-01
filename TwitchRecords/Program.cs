@@ -18,6 +18,25 @@ public class Program
     {
         var builder = Host.CreateApplicationBuilder(args);
 
+        builder.Logging.ClearProviders();
+        builder.Services.AddLogging(b =>
+        {
+            b.AddSimpleConsole(c => c.TimestampFormat = "[HH:mm:ss] ");
+
+#if DEBUG
+            {
+                b.SetMinimumLevel(LogLevel.Debug);
+            }
+#else
+            {
+                if (args.Contains("--debug"))
+                {
+                    b.SetMinimumLevel(LogLevel.Debug);
+                }
+            }
+#endif
+        });
+
         {
             var file = builder.Configuration.AddJsonFile("config.json")
                                 .Build();
